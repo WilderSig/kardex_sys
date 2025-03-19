@@ -1,0 +1,35 @@
+<div class="container">
+    <h2>Registrar Movimiento</h2>
+    <form (ngSubmit)="registrarMovimiento()">
+        <mat-form-field class="full-width">
+            <mat-label>Tipo de Movimiento</mat-label>
+            <mat-select [(ngModel)]="movimiento.tipoMovimientoId" name="tipoMovimientoId">
+                <mat-option [value]="1">Ingreso</mat-option>
+                <mat-option [value]="2">Salida</mat-option>
+                <mat-option [value]="3">Transferencia</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+            <mat-label>Producto</mat-label>
+            <input matInput type="text" [(ngModel)]="movimiento.productoId" name="productoId">
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+            <mat-label>Bodega Origen</mat-label>
+            <input matInput type="text" [(ngModel)]="movimiento.bodegaOrigenId" name="bodegaOrigenId">
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+            <mat-label>Bodega Destino</mat-label>
+            <input matInput type="text" [(ngModel)]="movimiento.bodegaDestinoId" name="bodegaDestinoId">
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+            <mat-label>Cantidad</mat-label>
+            <input matInput type="number" [(ngModel)]="movimiento.cantidad" name="cantidad">
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit">Registrar</button>
+    </form>
+</div>

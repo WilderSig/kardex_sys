@@ -1,0 +1,22 @@
+<div class="container">
+    <h2>Agregar Producto</h2>
+    <form (ngSubmit)="agregarProducto()">
+
+        <mat-form-field class="full-width">
+            <mat-label>SKU</mat-label>
+            <input matInput type="text" [(ngModel)]="producto.sku" name="sku">
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+            <mat-label>Descripción</mat-label>
+            <input matInput type="text" [(ngModel)]="producto.descripcion" name="descripcion">
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+            <mat-label>Fecha de Vencimiento</mat-label>
+            <input matInput type="date" [(ngModel)]="producto.fechaVencimiento" name="fechaVencimiento">
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit">Guardar</button>
+    </form>
+</div>

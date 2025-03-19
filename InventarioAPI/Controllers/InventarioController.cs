@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -34,7 +34,7 @@ public class InventarioController : ControllerBase
                 int result = cmd.ExecuteNonQuery();
                 conn.Close();
 
-                return result > 0 ? Ok("Producto registrado correctamente.") : BadRequest("Error al registrar el producto.");
+                return result > 0 ? Ok(new { message = "Producto registrado correctamente."}) : BadRequest(new { message = "Error al registrar el producto." });
             }
         }
     }
@@ -47,7 +47,7 @@ public class InventarioController : ControllerBase
         {
             using (SqlCommand cmd = new SqlCommand("RegistrarMovimiento", conn))
             {
-                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandType = CommandType.x;
                 cmd.Parameters.AddWithValue("@tipo_movimiento_id", movimiento.TipoMovimientoId);
                 cmd.Parameters.AddWithValue("@producto_id", movimiento.ProductoId);
                 cmd.Parameters.AddWithValue("@bodega_origen_id", (object)movimiento.BodegaOrigenId ?? DBNull.Value);
@@ -60,11 +60,11 @@ public class InventarioController : ControllerBase
                     int result = cmd.ExecuteNonQuery(); // Este puede ser 0 si no devuelve filas afectadas
                     conn.Close();
 
-                    return Ok("Movimiento registrado correctamente.");
+                    return Ok(new { message = "Movimiento registrado correctamente." });
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest($"Error en SQL: {ex.Message}");
+                    return BadRequest(new { message= $"Error en SQL: {ex.Message}" });
                 }
 
             }
@@ -99,4 +99,81 @@ public class InventarioController : ControllerBase
             }
         }
     }
+
+    [HttpGet("producto")]
+    public IActionResult ObtenerProductos()
+    {
+        List<Producto> productos = new List<Producto>();
+
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        {
+            string query = "SELECT id, sku, descripcion, fecha_vencimiento FROM Producto";
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                conn.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        productos.Add(new Producto
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("id")), 
+                            SKU = reader["sku"] != DBNull.Value ? reader["sku"].ToString()! : "", 
+                            Descripcion = reader["descripcion"] != DBNull.Value ? reader["descripcion"].ToString()! : "",
+                            FechaVencimiento = reader.GetDateTime(reader.GetOrdinal("fecha_vencimiento")) 
+                        });
+                    }
+                }
+                conn.Close();
+            }
+        }
+
+        return Ok(productos);
+    }
+
+
+    [HttpGet("movimiento")]
+    public IActionResult ObtenerMovimientos()
+    {
+        List<object> movimientos = new List<object>();
+
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        {
+            string query = @"
+            SELECT m.id, t.nombre AS tipoMovimiento, p.sku AS producto, 
+                   b1.nombre AS bodegaOrigen, b2.nombre AS bodegaDestino, 
+                   m.cantidad, m.fecha 
+            FROM Movimiento m
+            INNER JOIN TipoMovimiento t ON m.tipo_movimiento_id = t.id
+            INNER JOIN Producto p ON m.producto_id = p.id
+            LEFT JOIN Bodega b1 ON m.bodega_origen_id = b1.id
+            LEFT JOIN Bodega b2 ON m.bodega_destino_id = b2.id
+            ORDER BY m.fecha DESC";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                conn.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        movimientos.Add(new
+                        {
+                            Id = reader["id"],
+                            TipoMovimiento = reader["tipoMovimiento"].ToString(),
+                            Producto = reader["producto"].ToString(),
+                            BodegaOrigen = reader["bodegaOrigen"] != DBNull.Value ? reader["bodegaOrigen"].ToString() : "N/A",
+                            BodegaDestino = reader["bodegaDestino"] != DBNull.Value ? reader["bodegaDestino"].ToString() : "N/A",
+                            Cantidad = Convert.ToInt32(reader["cantidad"]),
+                            Fecha = Convert.ToDateTime(reader["fecha"]).ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                    }
+                }
+                conn.Close();
+            }
+        }
+
+        return Ok(movimientos);
+    }
+
 }
